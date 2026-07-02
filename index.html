@@ -10,6 +10,8 @@
 <!-- Firebase (only used if you paste a config below; harmless otherwise) -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<!-- jsPDF for on-device certificate generation -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
 :root{
   --evergreen:#13352a;
@@ -294,6 +296,167 @@ select.filter,.sel select{
 .callout p{margin:0;font-size:12.5px;color:#6e5d34;line-height:1.5}
 .callout a{color:var(--gold-deep);font-weight:600}
 
+/* ---------- Teacher Center ---------- */
+.sub-tabs{display:inline-flex;background:var(--white);border:1px solid var(--line);border-radius:11px;overflow:hidden;margin-bottom:22px;flex-wrap:wrap}
+.sub-tabs button{border:none;background:transparent;padding:11px 18px;font-size:13.5px;font-weight:600;color:var(--ink-soft);border-right:1px solid var(--line)}
+.sub-tabs button:last-child{border-right:none}
+.sub-tabs button.on{background:var(--forest);color:#fff}
+.sub-view{display:none;animation:fade .25s ease}
+.sub-view.on{display:block}
+.name-bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:linear-gradient(140deg,#f4ead0,#efe3c5);border:1px solid var(--cream-2);border-radius:12px;padding:12px 16px;margin-bottom:22px}
+.name-bar label{font-size:12.5px;font-weight:600;color:#6e5d34}
+.name-bar input{flex:1;min-width:180px;padding:9px 12px;border:1px solid var(--cream-2);border-radius:9px;font-size:13.5px;background:#fffdf7;color:var(--ink)}
+.name-bar .hint{font-size:11.5px;color:#8a7746;width:100%}
+
+/* PD day cards */
+.day-card{background:var(--white);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:16px;overflow:hidden}
+.day-head{display:flex;align-items:center;gap:14px;padding:15px 20px;background:linear-gradient(120deg,var(--evergreen),#17402f);color:var(--cream)}
+.day-head .dnum{font-family:'JetBrains Mono';font-weight:700;font-size:12px;color:var(--gold);background:rgba(199,154,60,.16);padding:5px 10px;border-radius:8px;flex:0 0 auto}
+.day-head .dday{font-family:'Fraunces',serif;font-size:18px;font-weight:600}
+.day-head .ddate{font-size:11.5px;color:#9db8a8;font-family:'JetBrains Mono'}
+.day-head .dfocus{margin-left:auto;font-size:12px;color:var(--gold);font-style:italic;text-align:right}
+.sess{display:grid;grid-template-columns:118px 1fr auto;gap:14px;padding:11px 20px;border-bottom:1px dashed var(--line);align-items:baseline}
+.sess:last-child{border-bottom:none}
+.sess.lunch{background:var(--cream);grid-template-columns:118px 1fr}
+.sess .stime{font-family:'JetBrains Mono';font-size:12px;color:var(--forest);font-weight:500}
+.sess .stitle{font-size:13.5px;font-weight:600}
+.sess .sdesc{font-size:12px;color:var(--ink-soft);margin-top:2px}
+.sess .smeta{font-size:11px;color:var(--gold-deep);font-family:'JetBrains Mono';text-align:right;white-space:nowrap}
+.sess.compliance .stitle::after{content:"PELSB";font-family:'JetBrains Mono';font-size:9px;background:var(--sage);color:var(--evergreen);padding:2px 6px;border-radius:10px;margin-left:8px;vertical-align:middle;font-weight:700}
+
+.matrix{width:100%;border-collapse:collapse;font-size:13px;background:var(--white);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+.matrix thead th{background:var(--evergreen);color:var(--cream);text-align:left;padding:11px 14px;font-size:10.5px;letter-spacing:.6px;text-transform:uppercase;font-family:'JetBrains Mono';font-weight:500}
+.matrix td{padding:11px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+.matrix tr:last-child td{border-bottom:none}
+.matrix .mtopic{font-weight:600}
+.matrix .mday{font-family:'JetBrains Mono';font-size:11px;color:var(--gold-deep);white-space:nowrap}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.mini-panel{background:var(--white);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;box-shadow:var(--shadow)}
+.mini-panel h4{font-family:'Fraunces',serif;font-size:15px;margin:0 0 10px}
+.mini-panel ul{margin:0;padding-left:18px;font-size:13px;color:var(--ink-soft);line-height:1.7}
+.pers-table{width:100%;border-collapse:collapse;font-size:12.5px}
+.pers-table td{padding:6px 8px 6px 0;border-bottom:1px dashed var(--line)}
+.pers-table td:first-child{font-weight:600;white-space:nowrap;color:var(--forest)}
+
+/* training callout card */
+.train-card{background:var(--white);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px 20px;margin-bottom:14px;display:flex;gap:16px;align-items:flex-start}
+.train-card .tc-ic{width:44px;height:44px;flex:0 0 44px;border-radius:11px;background:linear-gradient(150deg,var(--forest-2),var(--evergreen));display:grid;place-items:center;color:var(--gold)}
+.train-card .tc-ic svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.7}
+.train-card h4{margin:0 0 3px;font-family:'Fraunces',serif;font-size:16px}
+.train-card .tmeta{font-size:12px;color:var(--gold-deep);font-family:'JetBrains Mono';margin-bottom:7px}
+.train-card p{font-size:13px;color:var(--ink-soft);margin:0 0 12px;line-height:1.5}
+.train-card .tactions{display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+.btn-go{display:inline-flex;align-items:center;gap:7px;background:var(--forest);color:#fff;text-decoration:none;padding:9px 16px;border-radius:9px;font-size:13px;font-weight:600}
+.btn-go:hover{background:var(--forest-2)}
+.btn-go svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2}
+.done-check{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;font-weight:600;color:var(--ink-soft);cursor:pointer;user-select:none}
+.done-check .cbox{width:19px;height:19px;flex:0 0 19px}
+.done-check .cbox svg{width:12px;height:12px}
+.done-check.on{color:var(--forest)}
+.done-check.on .cbox{background:var(--forest);border-color:var(--forest)}
+.done-check.on .cbox svg{opacity:1}
+
+/* license roadmap */
+.lic-toggle{display:inline-flex;background:var(--white);border:1.5px solid var(--forest);border-radius:11px;overflow:hidden;margin-bottom:6px}
+.lic-toggle button{border:none;background:transparent;padding:11px 20px;font-size:13.5px;font-weight:600;color:var(--forest)}
+.lic-toggle button.on{background:var(--forest);color:#fff}
+.lic-intro{font-size:13px;color:var(--ink-soft);margin:12px 0 20px;max-width:75ch;line-height:1.6}
+.lic-step{background:var(--white);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);margin-bottom:10px;padding:14px 16px;display:flex;gap:13px;align-items:flex-start}
+.lic-step.on{background:#fbfdfa}
+.lic-step .lnum{width:26px;height:26px;flex:0 0 26px;border-radius:50%;background:var(--sage);color:var(--evergreen);display:grid;place-items:center;font-family:'JetBrains Mono';font-weight:700;font-size:12px;margin-top:1px}
+.lic-step.on .lnum{background:var(--forest);color:#fff}
+.lic-step .lbody{flex:1;min-width:0}
+.lic-step .ltitle{font-size:14px;font-weight:600;line-height:1.4}
+.lic-step.on .ltitle{color:var(--ink-soft);text-decoration:line-through;text-decoration-color:var(--sage-2)}
+.lic-step .ldesc{font-size:12.5px;color:var(--ink-soft);margin-top:5px;line-height:1.55}
+.lic-step .llinks{display:flex;flex-wrap:wrap;gap:7px;margin-top:9px}
+.lic-step .cbox{width:20px;height:20px;flex:0 0 20px;margin-top:2px}
+.lic-note{background:#f4ead0;border:1px solid var(--cream-2);border-radius:11px;padding:13px 16px;margin:16px 0;font-size:12.5px;color:#6e5d34;line-height:1.55}
+.lic-note strong{color:#5a4a1e}
+.lic-fee{display:inline-block;background:var(--evergreen);color:var(--gold);font-family:'JetBrains Mono';font-weight:700;font-size:12px;padding:4px 10px;border-radius:8px;margin-left:6px}
+
+/* JMC path code + emergency */
+.jmc-path{display:inline-block;font-family:'JetBrains Mono';font-size:11px;background:var(--evergreen);color:var(--gold);padding:3px 9px;border-radius:7px;margin-top:5px;letter-spacing:.2px}
+.jmc-item{display:flex;gap:11px;align-items:flex-start;padding:11px 0;border-bottom:1px dashed var(--line)}
+.jmc-item:last-child{border-bottom:none}
+.jmc-item .cbox{width:19px;height:19px;flex:0 0 19px;margin-top:2px}
+.jmc-item.on .cbox{background:var(--forest);border-color:var(--forest)}
+.jmc-item.on .cbox svg{opacity:1}
+.jmc-item .jtitle{font-size:13.5px;font-weight:600;line-height:1.35}
+.jmc-item.on .jtitle{color:var(--ink-soft);text-decoration:line-through;text-decoration-color:var(--sage-2)}
+.jmc-item .jdesc{font-size:12.5px;color:var(--ink-soft);margin-top:4px;line-height:1.5}
+.jmc-item .jtip{font-size:11.5px;color:var(--gold-deep);margin-top:5px;line-height:1.45;display:flex;gap:6px}
+.jmc-item .jtip b{font-family:'JetBrains Mono';font-size:10px;text-transform:uppercase;letter-spacing:.5px;flex:0 0 auto}
+.emg-card{background:var(--white);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:14px;overflow:hidden}
+.emg-head{display:flex;align-items:center;gap:14px;padding:15px 18px;cursor:pointer}
+.emg-ic{width:40px;height:40px;border-radius:10px;display:grid;place-items:center;flex:0 0 40px;color:#fff}
+.emg-ic svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:1.8}
+.emg-ic.fire{background:linear-gradient(150deg,#c9694f,#b1462e)}
+.emg-ic.lock{background:linear-gradient(150deg,#3a5a7a,#2c4258)}
+.emg-ic.recess{background:linear-gradient(150deg,#4d7a2c,#3a5f20)}
+.emg-head .et{font-family:'Fraunces',serif;font-size:16.5px;font-weight:600}
+.emg-head .es{font-size:11.5px;color:var(--ink-soft);margin-top:1px}
+.emg-head .review{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:11.5px;font-weight:600;color:var(--ink-soft);white-space:nowrap}
+.emg-head .review .cbox{width:18px;height:18px;flex:0 0 18px}
+.emg-head .review.on{color:var(--forest)}
+.emg-head .review.on .cbox{background:var(--forest);border-color:var(--forest)}
+.emg-head .review.on .cbox svg{opacity:1}
+.emg-body{display:none;padding:4px 18px 18px;border-top:1px solid var(--line)}
+.emg-card.open .emg-body{display:block}
+.emg-sec{margin-top:14px}
+.emg-sec h5{font-family:'JetBrains Mono';font-size:11px;letter-spacing:.6px;text-transform:uppercase;color:var(--gold-deep);margin:0 0 7px}
+.emg-sec p{font-size:13px;color:var(--ink-soft);margin:0 0 8px;line-height:1.55}
+.emg-sec ul{margin:0;padding-left:18px;font-size:13px;color:var(--ink);line-height:1.65}
+.emg-sec ul li b{color:var(--evergreen)}
+.emg-key{display:inline-block;background:#f7e3dc;color:var(--clay);font-weight:700;font-size:12px;font-family:'JetBrains Mono';padding:3px 10px;border-radius:7px}
+.emg-doors{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-top:4px}
+.emg-door{background:var(--cream);border:1px solid var(--line);border-radius:9px;padding:9px 11px}
+.emg-door .dn{font-family:'JetBrains Mono';font-weight:700;font-size:12px;color:var(--forest)}
+.emg-door .dg{font-size:12px;color:var(--ink-soft);margin-top:2px}
+
+/* Training certificates */
+.cert-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+.cert-card{background:var(--white);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px 18px;display:flex;flex-direction:column;transition:border-color .15s,transform .1s}
+.cert-card:hover{border-color:var(--gold);transform:translateY(-1px)}
+.cert-card .cc-top{display:flex;align-items:flex-start;gap:11px;margin-bottom:10px}
+.cert-card .cc-ic{width:38px;height:38px;flex:0 0 38px;border-radius:10px;background:linear-gradient(150deg,var(--forest-2),var(--evergreen));display:grid;place-items:center;color:var(--gold)}
+.cert-card .cc-ic svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.8}
+.cert-card h4{font-family:'Fraunces',serif;font-size:16px;margin:0;line-height:1.25}
+.cert-card .cc-min{font-size:11px;font-family:'JetBrains Mono';color:var(--gold-deep);margin-top:3px}
+.cert-card p{font-size:12.5px;color:var(--ink-soft);margin:0 0 14px;line-height:1.5;flex:1}
+.cert-card .cc-foot{display:flex;align-items:center;gap:10px}
+.cert-card .cc-btn{flex:1;background:var(--forest);color:#fff;border:none;padding:10px;border-radius:9px;font-size:13px;font-weight:600}
+.cert-card .cc-btn:hover{background:var(--forest-2)}
+.cert-card .cc-btn:disabled{background:#c9d2c7;cursor:not-allowed}
+.cert-badge{font-size:11px;font-weight:700;font-family:'JetBrains Mono';padding:4px 9px;border-radius:20px;white-space:nowrap}
+.cert-badge.done{background:#e0efe0;color:var(--forest)}
+.cert-badge.soon{background:var(--sage);color:var(--ink-soft)}
+
+.cert-player{background:var(--white);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+.cp-head{display:flex;align-items:center;gap:14px;padding:15px 20px;border-bottom:1px solid var(--line)}
+.cp-back{background:var(--sage);border:none;color:var(--evergreen);font-weight:600;font-size:12.5px;padding:8px 13px;border-radius:9px;display:inline-flex;align-items:center;gap:6px}
+.cp-back svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2}
+.cp-head h3{font-family:'Fraunces',serif;font-size:18px;margin:0}
+.cp-body{padding:20px}
+.video-wrap{position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:10px;background:#000}
+.video-wrap>div,.video-wrap iframe{position:absolute;top:0;left:0;width:100%;height:100%;border:0}
+.cp-progress{display:flex;align-items:center;gap:14px;margin-top:16px}
+.cp-bar{flex:1;height:8px;background:var(--sage-2);border-radius:999px;overflow:hidden}
+.cp-fill{height:100%;width:0%;background:linear-gradient(90deg,var(--gold),var(--forest));transition:width .3s}
+.cp-lbl{font-size:13px;color:var(--ink-soft);font-family:'JetBrains Mono';min-width:96px;text-align:right}
+.cp-status{margin-top:14px;padding:12px 15px;border-radius:9px;font-size:13px;background:rgba(199,154,60,.12);border-left:3px solid var(--gold);color:#6e5420}
+.cp-status.complete{background:rgba(29,94,68,.09);border-left-color:var(--forest);color:#1a5d3a}
+.cp-status.error{background:rgba(177,70,46,.09);border-left-color:var(--clay);color:#7a2a1a}
+.cp-form{margin-top:20px;padding-top:20px;border-top:1px solid var(--line);display:none}
+.cp-form.active{display:block;animation:fade .35s ease}
+.cp-form .field{margin-bottom:15px}
+.cp-form label{display:block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--ink-soft);margin-bottom:7px}
+.cp-form input{width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:9px;font-family:inherit;font-size:15px;background:var(--cream);color:var(--ink)}
+.cp-form input:focus{outline:none;border-color:var(--forest);background:#fff}
+.cp-gen{margin-top:6px;background:var(--evergreen);color:#fff;border:none;padding:13px 26px;border-radius:9px;font-size:14px;font-weight:600}
+.cp-gen:hover:not(:disabled){background:var(--forest)}
+.cp-gen:disabled{background:#c9d2c7;cursor:not-allowed}
+
 /* ---------- Mobile ---------- */
 .scrim{display:none}
 @media(max-width:880px){
@@ -352,6 +515,18 @@ select.filter,.sel select{
       <button class="nav-btn" data-view="staff">
         <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 00-3-3.87M16 3.13A4 4 0 0119 7"/></svg>
         Staff Checklist<span class="count" id="cnStaff"></span>
+      </button>
+      <button class="nav-btn" data-view="jmc">
+        <svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.7 4 3 9 3s9-1.3 9-3V5"/><path d="M3 12c0 1.7 4 3 9 3s9-1.3 9-3"/></svg>
+        JMC Setup<span class="count" id="cnJmc"></span>
+      </button>
+      <button class="nav-btn" data-view="teacher">
+        <svg viewBox="0 0 24 24"><path d="M22 10L12 5 2 10l10 5 10-5z"/><path d="M6 12v5c0 1 3 3 6 3s6-2 6-3v-5"/><path d="M22 10v6"/></svg>
+        Teacher Center
+      </button>
+      <button class="nav-btn" data-view="certificates">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="9" r="6"/><path d="M9 14.5L8 22l4-2 4 2-1-7.5"/></svg>
+        Training Certificates
       </button>
       <button class="nav-btn" data-view="resources">
         <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
@@ -493,6 +668,49 @@ select.filter,.sel select{
       <div id="staffBody"></div>
     </section>
 
+    <!-- JMC SETUP -->
+    <section class="view hidden" id="view-jmc">
+      <div class="eyebrow">Office &amp; Data · Shared with your team</div>
+      <h1 class="page-title">JMC beginning-of-year setup</h1>
+      <p class="page-sub">The JMC start-of-year modules, grouped as they appear in JMC. Typically handled by the Office Manager and Tech/Data Lead. Each module shows its own progress; check items off as you complete them — this syncs with your team.</p>
+      <div id="jmcBody"></div>
+    </section>
+
+    <!-- TEACHER CENTER -->
+    <section class="view hidden" id="view-teacher">
+      <div class="eyebrow">For Teachers · Use During PD Week</div>
+      <h1 class="page-title">Teacher Center</h1>
+      <p class="page-sub">Your hub for pre-service week: the full PD schedule, the trainings you must complete, and a step-by-step guide to your Tier 1 teaching license. Your name and license progress save privately on this device.</p>
+
+      <div class="name-bar">
+        <label for="teacherNameInput">Your name:</label>
+        <input type="text" id="teacherNameInput" placeholder="Type your name…" oninput="setTeacherName(this.value)">
+        <span class="hint">Saved only in this browser — used to keep your personal license checklist yours.</span>
+      </div>
+
+      <div class="sub-tabs" id="teacherSubTabs">
+        <button class="on" data-sub="schedule">PD Week Schedule</button>
+        <button data-sub="trainings">Required Trainings</button>
+        <button data-sub="emergency">Emergency &amp; Safety</button>
+        <button data-sub="license">Tier 1 License</button>
+      </div>
+
+      <div class="sub-view on" id="sub-schedule"></div>
+      <div class="sub-view" id="sub-trainings"></div>
+      <div class="sub-view" id="sub-emergency"></div>
+      <div class="sub-view" id="sub-license"></div>
+    </section>
+
+    <!-- TRAINING CERTIFICATES -->
+    <section class="view hidden" id="view-certificates">
+      <div class="eyebrow">Video Trainings · Certificate on Completion</div>
+      <h1 class="page-title">Training Certificates</h1>
+      <p class="page-sub">Watch a training video in full — skipping ahead won't count — then download a Bultum Academy certificate. Each completion is logged to the training Google Sheet for your records.</p>
+      <div id="certConfigNote"></div>
+      <div id="certCatalog"></div>
+      <div id="certPlayerWrap" style="display:none"></div>
+    </section>
+
     <!-- RESOURCES -->
     <section class="view hidden" id="view-resources">
       <div class="eyebrow">Resource Library</div>
@@ -538,6 +756,18 @@ const FIREBASE_CONFIG = {
   appId: "1:502366328609:web:71788a2ab9439c5dbb9060"
 };
 const SHARED_DOC = "readiness/2026-27";  // collection/doc all teammates share
+
+/* ===== TRAINING CERTIFICATES config ===== */
+/* Deploy the included Code.gs as a Google Apps Script Web App and paste its
+   /exec URL below to log completions to your Sheet. Certificates still
+   download even if this is blank (they just won't be recorded).            */
+const CERT_CONFIG = {
+  trackingUrl: "",                       // <- paste your Apps Script /exec URL
+  org: "Bultum Academy",
+  signatoryName: "Abas Regassa",         // signer shown on the certificate
+  signatoryTitle: "Assistant Director",
+  requiredFraction: 0.95                 // must watch 95% before the form unlocks
+};
 
 /* ---- Roles (the "Who" categories — role-based, assign people later) ---- */
 const ROLES = ["Unassigned","Director / Principal","Assistant Director","Instructional Coach",
@@ -710,8 +940,8 @@ const TASKS = [
 /* ---------- PHASE 5 — Pre-Service PD & Launch Readiness ---------- */
 {id:"t501",phase:5,track:"compliance",who:"All Admin",pri:"high",win:"Aug 18",
  title:"Deliver Mandated Reporter training (annual)",
- detail:"Annual MN requirement: identify, report, and document suspected child abuse/neglect, including cross-reporting. District must verify completion by November 15. Retain the sign-in sheet for licensure hours.",
- links:[L("MDE Student Maltreatment","https://education.mn.gov/MDE/dse/sped/")]},
+ detail:"Annual MN requirement: identify, report, and document suspected child abuse/neglect, including cross-reporting. District must verify completion by November 15. Retain the sign-in sheet for licensure hours. The MN Child Welfare Training Academy e-learning takes about 60 minutes.",
+ links:[L("MRT e-learning (~60 min)","https://mncwta.umn.edu/elearning/mrt/index.html#/lessons/wio5eHdklJkZvxyUIvay7AGmf8sXfnmS"),L("MDE Student Maltreatment","https://education.mn.gov/MDE/dse/sped/")]},
 {id:"t502",phase:5,track:"compliance",who:"All Admin",pri:"high",win:"Aug 18",
  title:"Deliver Bloodborne Pathogens, FERPA & Title IX session",
  detail:"OSHA-aligned bloodborne pathogens, data-privacy/FERPA, and harassment/discrimination (Title IX). Re-verified annually.",
@@ -759,7 +989,7 @@ const TRAININGS = [
  {id:"tr9",name:"Food Safety (8 hrs / 5 yrs for directors)",aud:"Food Service Director",link:L("FNS training","https://education.mn.gov/MDE/dse/FNS/SNP/train/")},
  {id:"tr10",name:"AI & Student Data Privacy / Acceptable Use",aud:"All staff",link:L("MDE AI in Education","https://education.mn.gov/MDE/dse/tech/AI/AIEd/")},
  {id:"tr11",name:"Phishing & Cybersecurity Awareness",aud:"All staff",link:L("CISA","https://www.cisa.gov/secure-our-world")},
- {id:"tr12",name:"Mandated Reporter (annual · verify by Nov 15)",aud:"All staff",link:L("PELSB","https://mn.gov/pelsb/")},
+ {id:"tr12",name:"Mandated Reporter (annual · verify by Nov 15)",aud:"All staff",link:L("Start MRT e-learning (~60 min)","https://mncwta.umn.edu/elearning/mrt/index.html#/lessons/wio5eHdklJkZvxyUIvay7AGmf8sXfnmS")},
  {id:"tr13",name:"Bloodborne Pathogens / FERPA / Title IX",aud:"All staff",link:null},
  {id:"tr14",name:"Mental Health & Suicide Prevention (PELSB)",aud:"All staff",link:null},
  {id:"tr15",name:"Cultural Competency + American Indian History & Culture (PELSB)",aud:"All staff",link:null},
@@ -842,7 +1072,7 @@ const RESOURCES = [
 ];
 
 /* ====================== STATE & PERSISTENCE ====================== */
-let STATE = { tasks:{}, trainings:{}, staff:[] };
+let STATE = { tasks:{}, trainings:{}, staff:[], jmc:{} };
 
 /* backend selection */
 let cloudDb=null, useCloud=false, docRef=null;
@@ -891,7 +1121,7 @@ function subscribeLive(){
   if(!useCloud || !docRef) return;
   docRef.onSnapshot(snap=>{
     if(!snap.exists || !snap.data().state) return;
-    STATE=Object.assign({tasks:{},trainings:{},staff:[]}, snap.data().state);
+    STATE=Object.assign({tasks:{},trainings:{},staff:[],jmc:{}}, snap.data().state);
     rerenderCurrent();
   }, err=>console.warn('live sync error',err));
 }
@@ -905,6 +1135,7 @@ function rerenderCurrent(){
   if(view==='roadmap')renderRoadmap();
   if(view==='training')renderTraining();
   if(view==='staff')renderStaff();
+  if(view==='jmc')renderJmc();
 }
 
 let saveTimer=null;
@@ -1122,9 +1353,538 @@ function toggleCheck(i,id){
   renderStaff(); $("#staff-"+i)?.classList.add('open'); renderOverview();
 }
 
+/* ====================== TEACHER CENTER ====================== */
+
+/* ---- Personal (per-teacher, per-browser) storage — independent of the shared admin data ---- */
+const PERSONAL_KEY='bultum_teacher_personal_v1';
+let PERSONAL={ name:"", licenseType:"renewal", checks:{} };
+function loadPersonal(){ try{ const r=localStorage.getItem(PERSONAL_KEY); if(r) PERSONAL=Object.assign(PERSONAL,JSON.parse(r)); }catch(e){} }
+function savePersonal(){ try{ localStorage.setItem(PERSONAL_KEY,JSON.stringify(PERSONAL)); }catch(e){} }
+
+/* ---- PD week schedule (from the 2026-27 Pre-Service PD document) ---- */
+const PD_SCHEDULE=[
+ {day:"Monday",date:"August 17",focus:"Welcome, Onboarding & Foundations",sessions:[
+   {time:"8:00 – 8:30",title:"Welcome Breakfast & Sign-In",desc:"Materials, name tags, parking & badges",who:"Office",loc:"Commons"},
+   {time:"8:30 – 9:00",title:"Principal's Welcome",desc:"Vision, mission & 2026–2027 schoolwide goals",who:"Principal",loc:"Commons"},
+   {time:"9:00 – 9:45",title:"Staff Introductions & Team Building",desc:"Returning + new staff connections",who:"LR / BC",loc:"Commons"},
+   {time:"10:00 – 11:00",title:"Bultum Families & Cultural Context",desc:"Oromo, Somali & Arabic-speaking community; EL strategies",who:"Leadership",loc:"Commons",comp:true},
+   {time:"11:00 – 12:00",title:"Technology & School Systems Walkthrough",desc:"Printer/copier, JMC SIS, Common Curriculum, MobyMax basics",who:"BC / Tech",loc:"Lab"},
+   {time:"12:00 – 1:00",title:"Lunch",lunch:true},
+   {time:"1:00 – 2:00",title:"Staff Handbook, Policies & Calendar",desc:"Attendance, professional expectations, key dates",who:"LR",loc:"Commons"},
+   {time:"2:00 – 3:00",title:"Office Overview & All-Staff Health & Safety",desc:"Building procedures, sign-in/out, supply/copy systems",who:"Office",loc:"Commons",comp:true},
+   {time:"3:15 – 4:00",title:"Curriculum Mapping Kickoff & Classroom Setup",desc:"Introduce mapping framework; begin in-room setup",who:"Teams / Self",loc:"Rooms"}
+ ]},
+ {day:"Tuesday",date:"August 18",focus:"MN Compliance, Safety & Student Wellbeing",sessions:[
+   {time:"8:00 – 8:30",title:"Coffee & Day 2 Welcome",who:"Office",loc:"Commons"},
+   {time:"8:30 – 9:30",title:"Mandated Reporter Training",desc:"MN required annually; identify, report, document — child abuse/neglect",who:"LR",loc:"Commons",comp:true},
+   {time:"9:30 – 10:30",title:"Bloodborne Pathogens, FERPA & Title IX",desc:"OSHA-aligned BBP; data privacy; harassment/discrimination",who:"LR / BC",loc:"Commons",comp:true},
+   {time:"10:45 – 12:00",title:"Mental Health, Suicide Prevention & Trauma-Informed Practice",desc:"PELSB requirement: early-onset warning signs, response, referrals",who:"Counselor",loc:"Commons",comp:true},
+   {time:"12:00 – 1:00",title:"Lunch",lunch:true},
+   {time:"1:00 – 2:15",title:"Cultural Competency",desc:"PELSB requirement; equity, asset-based instruction, microaggressions",who:"Leadership",loc:"Commons",comp:true},
+   {time:"2:15 – 3:00",title:"American Indian History & Culture",desc:"PELSB required content for MN educators",who:"Leadership",loc:"Commons",comp:true},
+   {time:"3:15 – 4:00",title:"Emergency Drills & Crisis Response",desc:"Lockdown, fire, severe weather, evacuation protocols",who:"Abas",loc:"Commons",comp:true}
+ ]},
+ {day:"Wednesday",date:"August 19",focus:"SPED, MTSS & Curriculum",sessions:[
+   {time:"8:00 – 8:30",title:"Coffee & Day 3 Welcome",who:"Office",loc:"Commons"},
+   {time:"8:30 – 9:00",title:"HMH Curriculum Tips",desc:"New & returning staff; pacing, resources, digital tools",who:"BC",loc:"Commons"},
+   {time:"9:00 – 11:00",title:"SPED & 504 Overview",desc:"Caseloads, IEP timelines, service delivery, paperwork",who:"S. Abdirashid",loc:"Commons"},
+   {time:"11:00 – 12:00",title:"Behavior & MTSS",desc:"Multi-tiered systems of support; Tier 1/2/3 behavior framework",who:"Mr. Mohamed",loc:"Commons",comp:true},
+   {time:"12:00 – 1:00",title:"Lunch",lunch:true},
+   {time:"1:00 – 2:00",title:"Common Curriculum (Reserved — TBD)",desc:"Time slot reserved; content to be confirmed",who:"TBD",loc:"Commons"},
+   {time:"2:00 – 2:45",title:"MN Read Act / Science of Reading",desc:"Structured literacy expectations & local implementation",who:"LR",loc:"Commons",comp:true},
+   {time:"3:00 – 4:00",title:"Curriculum Mapping & Grade-Level Planning",desc:"Build pacing maps; align across grade teams",who:"Teams",loc:"Rooms"}
+ ]},
+ {day:"Thursday",date:"August 20",focus:"Behavior, Reading & Mapping",sessions:[
+   {time:"8:00 – 8:30",title:"Coffee & Day 4 Welcome",who:"Office",loc:"Commons"},
+   {time:"8:30 – 10:00",title:"BARR Overview — Fostering Resilience & Reducing Risks",desc:"Condensed K-12 BARR essentials; cohorts, risk review, asset-building",who:"BARR Coach",loc:"Commons"},
+   {time:"10:15 – 11:30",title:"Groves Training & Data Review (K-3 + Robert)",desc:"Reading model & data review · Grades 4-8: Curriculum Mapping (parallel)",who:"T. Harty",loc:"K-3 Wing",comp:true},
+   {time:"11:30 – 12:00",title:"MobyMax Training",desc:"Focus on new teachers; returning staff refresh",who:"Mr. C",loc:"Lab"},
+   {time:"12:00 – 1:00",title:"Lunch",lunch:true},
+   {time:"1:00 – 2:00",title:"Grade-Level & Department Meetings",desc:"Grade 4, MS Math, MS ELA, MS Social Studies, MS Science",who:"Team Leads",loc:"Rooms"},
+   {time:"2:00 – 2:45",title:"FastBridge & Capti ReadBasix",desc:"K-3 universal screening + intervention tools (interventionists & subs)",who:"LR / BC / AR",loc:"Lab",comp:true},
+   {time:"2:45 – 3:30",title:"JMC Training & Employee Benefits",desc:"Gradebook/attendance; benefits Q&A",who:"Paul / HR",loc:"Lab"},
+   {time:"3:30 – 4:00",title:"Curriculum Mapping (Whole Staff)",desc:"Continue building pacing maps across grade teams",who:"Teams",loc:"Rooms"}
+ ]},
+ {day:"Friday",date:"August 21",focus:"Final Prep & Open House",sessions:[
+   {time:"12:00 – 12:30",title:"Staff Arrives · Q&A and Week Wrap-Up",desc:"Outstanding questions; quick week reflection",who:"Leadership",loc:"Commons"},
+   {time:"12:30 – 3:00",title:"Independent Classroom Prep",desc:"Final setup, lesson copies, materials, bulletin boards, displays",who:"Self",loc:"Rooms"},
+   {time:"3:00 – 7:00",title:"OPEN HOUSE",desc:"Families arrive starting at 3:00; meet the teacher",who:"All Staff",loc:"Building"}
+ ]}
+];
+const COMPLIANCE_MATRIX=[
+ {topic:"Mandated Reporter (Child Abuse / Neglect)",where:"Mandated Reporter Training — annual MN requirement; cross-reporting",day:"Tue"},
+ {topic:"Bloodborne Pathogens (OSHA / MN)",where:"Bloodborne Pathogens, FERPA & Title IX session",day:"Tue"},
+ {topic:"Cultural Competency (PELSB)",where:"Cultural Competency block + Bultum Families & Cultural Context",day:"Mon / Tue"},
+ {topic:"American Indian History & Culture (PELSB)",where:"American Indian History & Culture session",day:"Tue"},
+ {topic:"Mental Health — Early-Onset Warning Signs",where:"Mental Health Awareness & Trauma-Informed Practices",day:"Tue"},
+ {topic:"Suicide Prevention",where:"Built into Mental Health & Suicide Prevention block",day:"Tue"},
+ {topic:"Reading Preparation (MN Read Act)",where:"MN Read Act / Science of Reading + Groves training",day:"Wed"},
+ {topic:"English Learners (EL)",where:"Bultum Families & Cultural Context (EL strategies)",day:"Mon"},
+ {topic:"Positive Behavioral Interventions (PBIS)",where:"BARR + Behavior & MTSS + Classroom Procedures",day:"Wed / Thu"},
+ {topic:"Emergency / Safety Drills",where:"Emergency Drills & Crisis Response + All-Staff Health & Safety",day:"Mon / Tue"},
+ {topic:"Data Privacy / FERPA",where:"Bloodborne Pathogens, FERPA & Title IX session",day:"Tue"}
+];
+const PERSONNEL=[
+ ["LR / BC / AR","Curriculum & Instructional Coaches"],["Abas","Health, Safety & Emergency Procedures Lead"],
+ ["Mr. Mohamed","Behavior & MTSS Lead"],["Paul","JMC Student Information System Trainer"],
+ ["S. Abdirashid","Special Education Director"],["T. Harty","Groves Reading Coach (external)"],
+ ["Robert Stubbs","K-3 Reading Support"],["Mr. C","MobyMax / Technology Training"]
+];
+const BRING=["Laptop or device + charger","Notebook and pen","Water bottle","Curriculum materials (Wed & Thu)","Class roster printouts (Thu for grade-level meetings)","Professional dress for Open House on Friday evening"];
+
+/* ---- Teacher trainings (self-serve / online) ---- */
+const TEACHER_TRAININGS=[
+ {id:"mrt",name:"Mandated Reporter Training (MRT)",time:"~60 minutes · required annually",
+  desc:"Minnesota's required e-learning on identifying, reporting, and documenting suspected child abuse or neglect. Complete it before students arrive; the district must verify completion by November 15. This is also delivered live on Tuesday, Aug 18 — the online course covers the same requirement.",
+  url:"https://mncwta.umn.edu/elearning/mrt/index.html#/lessons/wio5eHdklJkZvxyUIvay7AGmf8sXfnmS",btn:"Start MRT e-learning"}
+];
+
+/* ---- Tier 1 license roadmap ---- */
+const LICENSE={
+ renewal:{
+  label:"Tier 1 Renewal",
+  intro:"Renewing an existing Tier 1 license is similar to your first application — but in Section 2 (Application Type) you must select \u201Ccheck here if you are renewing an existing tier 1 license.\u201D You can mail the completed packet to PELSB after July 1, 2026, or renew online through the CEL portal. Download the application first, then type and re-save your information.",
+  fee:"$57",
+  steps:[
+   {id:"r1",title:"Complete the full application (except Section 6)",
+    desc:"Download the Tier 1 application, fill in everything except Section 6 (District Verification), and re-save. In Section 2 (Application Type), check \u201Crenewing an existing tier 1 license.\u201D",
+    links:[L("Tier 1 Application (PDF)","https://mn.gov/pelsb/assets/Application%20for%20Tier%201%20License%202026%20POST_tcm1113-743834.pdf"),L("Or renew online (CEL)","https://public.education.mn.gov/CELApplication/")]},
+   {id:"r2",title:"Obtain a signed Section 6 from a school administrator",
+    desc:"Section 6 is the district/employer verification — have a Bultum administrator sign it."},
+   {id:"r3",title:"Include a check for the application fee",
+    desc:"A $57 check (payable to PELSB) for the application process."},
+   {id:"r4",title:"Cultural Competency training — attach CEU",
+    desc:"Complete a PELSB-approved cultural competency training and attach the CEU certificate.",
+    links:[L("PELSB approved list","https://docs.google.com/document/d/1nd-JIaYCVQAOKWbLaWiCxonLgo8iLY1qGaBe82O9g0I/edit"),L("EQ Learn ($30)","https://eqlearn.com/continuing-education-credits-for-teachers-online/"),L("Learners Edge ($99)","https://courses.teachingchannel.com/courses/dl/state-specific/Culturally-Responsive-Teaching-Awareness-to-Action/124"),L("Teacherly ($89)","https://teacherly.thinkific.com/courses/culturalcompetency"),L("TE2 ($75)","https://courses.te2consulting.com/courses/mn-pelsb-cultural-competency-training-cct")]},
+   {id:"r5",title:"Mental Health training incl. suicide prevention — attach CEU",
+    desc:"Use the Bultum mental health CEU if you attended the training. If not, complete one of the EQ Learn courses and attach the CEU.",
+    links:[L("Students Impacted by Trauma","https://eqlearn.com/courses/students-impacted-by-trauma-support-for-children-and-educators/"),L("Early Warning Signs","https://eqlearn.com/courses/early-warning-signs-of-childrens-mental-health-disorders-course/"),L("Suicide Prevention","https://eqlearn.com/courses/suicide-prevention-training-teachers/")]},
+   {id:"r6",title:"American Indian History & Culture training — attach CEU",
+    desc:"Complete an approved American Indian History & Culture training and attach the CEU.",
+    links:[L("Office of American Indian Education course","https://renewateachinglicense.com/member/product/k12-online-pd-teacher-American-Indian-History-and-Culture-for-MN-Teachers-ss5?c=27")]},
+   {id:"r7",title:"MTLE test attempt (once)",
+    desc:"PELSB requires an attempt (you don't have to pass) — required only once for Tier 1 renewal. Create an MTLE account, register for Special Education Core Skills (birth–21) subtests 1 and 2, pick a date/time, and pay the separate MTLE fee.",
+    links:[L("Create MTLE account","https://www.mtle.nesinc.com/App/SignInForm.aspx?ReturnUrl=%2fApp%2fRegister%2fIdentityConfirmation.aspx")]}
+  ],
+  note:"You will NOT need fingerprints or transcripts for renewal. Mail all completed documents to PELSB in one packet after July 1, 2026 — or use the online CEL renewal. Attach every CEU certificate. Questions? Ask your administrator."
+ },
+ firstTime:{
+  label:"First-Time Tier 1",
+  intro:"A first Tier 1 license is applied for jointly by you and Bultum Academy (a MN charter). If you've never held a PELSB license, apply through the Online Licensing System (you'll need a Google account). Unlike renewal, the first application requires a fingerprint/background check and official transcripts. The cultural competency, mental health, and American Indian History CEUs and the MTLE attempt become required at your first renewal, not now — but confirm specifics with your administrator.",
+  fee:"~$90 (incl. fingerprint card)",
+  steps:[
+   {id:"f1",title:"Confirm eligibility",
+    desc:"Hold a bachelor's degree (or a CTE alternative: AA, professional certification, or 5 years of relevant experience) and have a job offer from Bultum. The district applies jointly with you."},
+   {id:"f2",title:"Start the application in the Online Licensing System",
+    desc:"First-time applicants apply online (not the paper form). Create a Google account if you don't have one.",
+    links:[L("PELSB Online Licensing System","https://public.education.mn.gov/CELApplication/"),L("Tier 1 overview","https://mn.gov/pelsb/aspiring-educators/firstlicense/tier1tier2/tier1tier2.jsp")]},
+   {id:"f3",title:"District verification (Section 6)",
+    desc:"A Bultum administrator completes the employer/district verification portion of the application."},
+   {id:"f4",title:"Fingerprint card + background check",
+    desc:"Required for initial licensure. Request a fingerprint card from PELSB and include the completed card; a BCA/FBI background check is part of the process.",
+    links:[L("Request a fingerprint card","https://mn.gov/pelsb/current-educators/requirements/")]},
+   {id:"f5",title:"Official transcripts",
+    desc:"Submit official (sealed) transcripts, or have your institution send them electronically to PELSB. Send everything as one complete packet."},
+   {id:"f6",title:"Application fee",
+    desc:"Include the initial application fee (which covers the fingerprint card). Check or money order payable to PELSB — no cash. Confirm the current amount on the PELSB site.",
+    links:[L("Licensure requirements & fees","https://mn.gov/pelsb/current-educators/requirements/")]}
+  ],
+  note:"PELSB issues or denies a license within 30 days of receiving a complete application AND a completed background check. A Tier 1 license is valid for one school year and is specific to the district and licensure field on the application."
+ }
+};
+
+/* ---- Teacher render ---- */
+let teacherSub="schedule";
+function renderTeacher(){
+  const nm=$("#teacherNameInput"); if(nm && nm.value!==PERSONAL.name) nm.value=PERSONAL.name||"";
+  renderPDSchedule(); renderTeacherTrainings(); renderEmergency(); renderLicense();
+}
+function renderPDSchedule(){
+  const days=PD_SCHEDULE.map((d,i)=>{
+    const rows=d.sessions.map(s=>{
+      if(s.lunch) return `<div class="sess lunch"><div class="stime">${s.time}</div><div class="stitle">${s.title}</div></div>`;
+      return `<div class="sess ${s.comp?'compliance':''}">
+        <div class="stime">${s.time}</div>
+        <div><div class="stitle">${s.title}</div>${s.desc?`<div class="sdesc">${s.desc}</div>`:''}</div>
+        <div class="smeta">${s.who||''}${s.loc?' · '+s.loc:''}</div></div>`;
+    }).join('');
+    return `<div class="day-card">
+      <div class="day-head"><span class="dnum">DAY ${i+1}</span>
+        <div><div class="dday">${d.day}</div><div class="ddate">${d.date}, 2026</div></div>
+        <div class="dfocus">${d.focus}</div></div>
+      ${rows}</div>`;
+  }).join('');
+  const matrix=`<div class="panel" style="margin-top:8px"><div class="panel-head"><h3>Minnesota / PELSB compliance coverage</h3><span class="hint">where each required topic is covered</span></div>
+    <div class="panel-body" style="padding:0"><table class="matrix"><thead><tr><th>Required topic</th><th>Where it's covered</th><th>Day</th></tr></thead><tbody>
+    ${COMPLIANCE_MATRIX.map(m=>`<tr><td class="mtopic">${m.topic}</td><td>${m.where}</td><td class="mday">${m.day}</td></tr>`).join('')}
+    </tbody></table></div></div>`;
+  const extras=`<div class="two-col" style="margin-top:20px">
+    <div class="mini-panel"><h4>What to bring each day</h4><ul>${BRING.map(b=>`<li>${b}</li>`).join('')}</ul></div>
+    <div class="mini-panel"><h4>Key personnel &amp; facilitators</h4><table class="pers-table"><tbody>
+      ${PERSONNEL.map(p=>`<tr><td>${p[0]}</td><td>${p[1]}</td></tr>`).join('')}</tbody></table></div></div>`;
+  $("#sub-schedule").innerHTML=`
+    <div class="callout" style="margin-bottom:20px"><div class="ci"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div>
+      <div><h4>Pre-Service PD · August 17–21, 2026</h4><p>Mon–Thu 8:00 AM–4:00 PM (lunch 12–1). Friday: staff arrives 12:00 PM, Open House 3:00–7:00 PM. ~30 hours of professional learning plus classroom prep.</p></div></div>
+    ${days}${matrix}${extras}`;
+}
+function renderTeacherTrainings(){
+  const linkArrow='<svg viewBox="0 0 24 24"><path d="M5 12h14M13 5l7 7-7 7"/></svg>';
+  const cards=TEACHER_TRAININGS.map(t=>{
+    const done=!!PERSONAL.checks['train_'+t.id];
+    return `<div class="train-card">
+      <div class="tc-ic"><svg viewBox="0 0 24 24"><path d="M12 2l3 7h7l-5.5 4 2 7L12 16l-6.5 4 2-7L2 9h7z"/></svg></div>
+      <div style="flex:1">
+        <h4>${t.name}</h4><div class="tmeta">${t.time}</div>
+        <p>${t.desc}</p>
+        <div class="tactions">
+          <a class="btn-go" href="${t.url}" target="_blank" rel="noopener">${t.btn} ${linkArrow}</a>
+          <span class="done-check ${done?'on':''}" onclick="toggleTrainDone('${t.id}')">
+            <span class="cbox"><svg viewBox="0 0 24 24"><path d="M4 12l5 5L20 6"/></svg></span>I completed this</span>
+        </div>
+      </div></div>`;
+  }).join('');
+  $("#sub-trainings").innerHTML=cards+`
+    <div class="callout"><div class="ci"><svg viewBox="0 0 24 24"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.7 3.86a2 2 0 00-3.4 0z"/></svg></div>
+      <div><h4>Your other PELSB trainings happen live during PD week</h4><p>Bloodborne Pathogens, FERPA/Title IX, Mental Health &amp; Suicide Prevention, Cultural Competency, American Indian History &amp; Culture, and Emergency Drills are all delivered Tuesday, Aug 18. Sign in at each so your clock hours are documented. See the PD Week Schedule tab for times.</p></div></div>`;
+}
+function renderLicense(){
+  const type=PERSONAL.licenseType||'renewal';
+  const data=LICENSE[type==='firstTime'?'firstTime':'renewal'];
+  const steps=data.steps.map((s,i)=>{
+    const on=!!PERSONAL.checks['lic_'+type+'_'+s.id];
+    const links=(s.links||[]).map(l=>`<a class="lnk" href="${l.url}" target="_blank" rel="noopener" onclick="event.stopPropagation()">${linkSvg}${l.label}</a>`).join('');
+    return `<div class="lic-step ${on?'on':''}">
+      <div class="cbox" onclick="toggleLicStep('${type}','${s.id}')" role="checkbox" aria-checked="${on}" tabindex="0" onkeydown="if(event.key===' '||event.key==='Enter'){event.preventDefault();toggleLicStep('${type}','${s.id}')}">
+        <svg viewBox="0 0 24 24"><path d="M4 12l5 5L20 6"/></svg></div>
+      <div class="lnum">${i+1}</div>
+      <div class="lbody"><div class="ltitle">${s.title}</div><div class="ldesc">${s.desc}</div>
+        ${links?`<div class="llinks">${links}</div>`:''}</div></div>`;
+  }).join('');
+  $("#sub-license").innerHTML=`
+    <div class="lic-toggle">
+      <button class="${type==='renewal'?'on':''}" onclick="setLicType('renewal')">Tier 1 Renewal</button>
+      <button class="${type==='firstTime'?'on':''}" onclick="setLicType('firstTime')">First-Time Tier 1</button>
+    </div>
+    <span class="lic-fee">Fee: ${data.fee}</span>
+    <p class="lic-intro">${data.intro}</p>
+    ${steps}
+    <div class="lic-note"><strong>Good to know:</strong> ${data.note}</div>
+    <p style="font-size:11.5px;color:var(--ink-soft)">Requirements can change — always confirm current steps and fees with your administrator and the PELSB website before mailing. Your checkmarks here save privately on this device only.</p>`;
+}
+function switchTeacherSub(sub){
+  teacherSub=sub;
+  $$("#teacherSubTabs button").forEach(b=>b.classList.toggle('on',b.dataset.sub===sub));
+  $$(".sub-view").forEach(v=>v.classList.remove('on'));
+  $("#sub-"+sub).classList.add('on');
+}
+function setTeacherName(v){ PERSONAL.name=v; savePersonal(); }
+function setLicType(t){ PERSONAL.licenseType=t; savePersonal(); renderLicense(); }
+function toggleLicStep(type,id){ const k='lic_'+type+'_'+id; PERSONAL.checks[k]=!PERSONAL.checks[k]; savePersonal(); renderLicense(); }
+function toggleTrainDone(id){ const k='train_'+id; PERSONAL.checks[k]=!PERSONAL.checks[k]; savePersonal(); renderTeacherTrainings(); }
+
+/* ====================== JMC SETUP ====================== */
+const JMC_DATA=[
+ {group:"Lunch — Free & Reduced Setup",items:[
+   {id:"jl1",path:"Lunch → Data Setup → Import Free and Reduced Status From Prior Year",title:"Import free/reduced status from prior year",desc:"Import students' lunch status from the previous year."},
+   {id:"jl2",path:"Lunch → Free/Reduced → Determine Free or Reduced Status",title:"Determine free or reduced status",desc:"For all parents/guardians who applied for free or reduced status, determine each student's status."},
+   {id:"jl3",path:"Lunch → Free/Reduced → Direct Certification Import",title:"Direct certification import",desc:"Import the State Department direct certification files to automatically assign directly certified students the appropriate status."},
+   {id:"jl4",path:"Lunch → Free/Reduced → Direct Certification Notification Letter",title:"Direct certification notification letter",desc:"Print the direct certification response letter."}
+ ]},
+ {group:"JMC Modules",items:[
+   {id:"jm1",path:"File → Application Security",title:"Set up office staff logins & privileges",desc:"New office personnel should be given JMC usernames/passwords with the appropriate user privileges.",tip:"Delete usernames/passwords for office personnel who have not returned this year."},
+   {id:"jm2",path:"Edit → Student Data  ·  Edit → Mass Change Fields",title:"Assign locker numbers & combinations",desc:"Assign locker numbers and combinations with the first link.",tip:"Locker numbers can be cleared en masse at the District Level using the second link."},
+   {id:"jm3",path:"Attendance → Student → List",title:"Create student photo export file",desc:"If exporting photo info to an outside company (e.g., Lifetouch): Reports dropdown → 'Student Photo File' → Preview → 'Export Data' to create the file to email your photo company."},
+   {id:"jm4",path:"File → Define Custom Fields",title:"Import & review custom fields",desc:"Import and review the previous year's custom fields, add any new definitions, and checkmark 'Current Year' for the fields you'll use.",tip:"You'll need the JMC Administrator Password to view this screen."},
+   {id:"jm5",path:"Edit → Student Data",title:"Update Comments & Spec Ed tabs",desc:"Update the 'Comments' and 'Spec Ed' tabs with information teachers will see in JMC Online Teacher.",tip:"You can also update confidential comments at this time."},
+   {id:"jm6",path:"Attendance → Staff → Assign Advisees  ·  Edit → Student Data",title:"Assign advisors",desc:"Assign advisors en masse with the first link, or individually with the second."},
+   {id:"jm7",path:"Attendance → Staff → Teachers",title:"Enter new teachers & grade-book logins",desc:"Enter new teachers with usernames/passwords for the grade book; check the 'Building Access' flag for each building, then OK/UPDATE. Replace outgoing teachers' names with the new teacher's.",tip:"Entering the new teacher's name puts it in the course data for easier scheduling."},
+   {id:"jm8",path:"Attendance → Student → Exceptions",title:"Verify student flags",desc:"Double-check that Active, Attend, State Reporting, Rank, and Honor Roll flags are correctly checked for students."},
+   {id:"jm9",path:"Attendance → Calendar → Days",title:"Enter special days & term dates",desc:"Enter special days that are exceptions to the district calendar, and set term start/end dates for all terms used in schedules.",tip:"First set the first and last day of school at the district level before setting special days/term dates."},
+   {id:"jm10",path:"Attendance → Staff → Substitutes",title:"Enter substitute teachers",desc:"Enter substitute teachers.",tip:"Using 'Add Record' lets the sub take attendance for the teacher they're covering for the set date/time."}
+ ]},
+ {group:"Schedule",items:[
+   {id:"js1",path:"Scheduling Article",title:"Review scheduling instructions",desc:"If your current-year schedule isn't complete or you need more instruction, follow the links to download the scheduling instructions."},
+   {id:"js2",path:"Schedule → Develop → Locking Options",title:"Lock schedules",desc:"Once all mass scheduling is done, lock schedules.",tip:"The access code is the school's postal area code. Individual schedules can still change after locking; mass scheduling is disabled for safety."},
+   {id:"js3",path:"Schedule → Prerequisites → Edit Prerequisites",title:"Import prerequisites",desc:"If you use prerequisites, import them from the previous year."},
+   {id:"js4",path:"Schedules → Course → Import Course Data",title:"Import course data (MCCC)",desc:"If you changed course data for State Reporting after last year's roll-up, import those changes. This is for MCCC."}
+ ]},
+ {group:"Grading",items:[
+   {id:"jg1",path:"Grading → Reports → Report Cards",title:"Decide report card delivery",desc:"Decide how to send report cards — emailed, custom, mid-term, and standards & benchmarks report cards are all available."},
+   {id:"jg2",path:"Grading → Transcripts → Transcript Linker",title:"Turn on transcript linker",desc:"If transcripts are used and prior-year info is up to date, turn on the linker, check 'Use transcript results for cumulative data,' update, then click 'Use Transcript.'"},
+   {id:"jg3",path:"Grading → Test Score → Test Score Selection  ·  Edit Student Test Scores",title:"Choose standardized test scores",desc:"Choose which standardized test scores appear 'On Screen' and 'On Transcripts.'",tip:"'On Screen' settings save per user. Use 'selected categories' in the Display dropdown to limit to chosen scores."},
+   {id:"jg4",path:"Grading → Credit Checker → Import Graduation Credit Requirements",title:"Import credit checker data",desc:"Import Credit Checker data from the prior year: choose the graduation year and click 'Import,' then select the year to work with and import again."}
+ ]},
+ {group:"State Reporting",items:[
+   {id:"jsr1",path:"Minnesota → MARSS → Data → Update Status from Last EOY",title:"Update status from last EOY",desc:"Import your enrollment history from the prior year.",tip:"A must-do before school starts — do it in August after MDE certification."},
+   {id:"jsr2",path:"State IDs",title:"Ensure all students have state IDs",desc:"Complete the steps to ensure every student has a state ID."},
+   {id:"jsr3",path:"Ed-Fi Start-of-Year Tasks",title:"Ed-Fi start-of-year tasks",desc:"MN Ed-Fi folks only: perform start-of-year tasks based on your school's Ed-Fi implementation status."}
+ ]},
+ {group:"Period Attendance",items:[
+   {id:"jp1",path:"Period Attendance → Data → Edit Reasons and Cutoffs",title:"Review reasons & cutoffs",desc:"Review absence reasons (add/delete), full/half-day cutoff values, and the 'Include in conversion' checkmarks."},
+   {id:"jp2",path:"Form Designer",title:"Update absent/tardy letters",desc:"If your absent/tardy letters were set up last year, update each letter in this year's Form Designer with the new start and end dates."}
+ ]},
+ {group:"Standards & Benchmarks",items:[
+   {id:"jsb1",path:"Standards and Benchmarks → Definitions → Import from Prior Year",title:"Import standards & benchmarks",desc:"No need to recreate the wheel — import last year's standards and benchmarks into this year."},
+   {id:"jsb2",path:"Standards and Benchmarks → Student → Bulk Load Report Card Forms",title:"Bulk load report card forms",desc:"Once report cards are ready, bulk-load the report card forms to students by grade, advisor, or randomly for use in JMC Office, Teacher, and Family."}
+ ]},
+ {group:"Activities",items:[
+   {id:"ja1",path:"Activities → Edit Activity Rosters",title:"Import/enter activity rosters",desc:"Import and/or enter rosters for activities.",tip:"Coaches/Advisors can add their own rosters in the JMC Coach/Activity app."},
+   {id:"ja2",path:"Activities → Edit Activity Coach/Advisor  ·  Edit Activity Definitions",title:"Update coaches/advisors & definitions",desc:"Update Coach/Advisor info with the first link, then enter updated activity info attaching the correct Coach/Advisor with the second. Then have Coaches/Advisors download the JMC Coach Activity app."}
+ ]}
+];
+function jmcAllItems(){ return JMC_DATA.reduce((a,g)=>a.concat(g.items),[]); }
+function jmcGroupProg(g){ const d=g.items.filter(it=>STATE.jmc[it.id]).length; return {done:d,total:g.items.length,pct:pct(d,g.items.length)}; }
+function jmcOverall(){ const all=jmcAllItems(); const d=all.filter(it=>STATE.jmc[it.id]).length; return {done:d,total:all.length}; }
+function toggleJmc(id){ STATE.jmc[id]=!STATE.jmc[id]; persist(); renderJmc(); updateCounts(); }
+function renderJmc(){
+  $("#jmcBody").innerHTML=JMC_DATA.map((g,gi)=>{
+    const pr=jmcGroupProg(g);
+    const rows=g.items.map(it=>`
+      <div class="jmc-item ${STATE.jmc[it.id]?'on':''}">
+        <div class="cbox" onclick="toggleJmc('${it.id}')" role="checkbox" aria-checked="${!!STATE.jmc[it.id]}" tabindex="0" onkeydown="if(event.key===' '||event.key==='Enter'){event.preventDefault();toggleJmc('${it.id}')}">
+          <svg viewBox="0 0 24 24"><path d="M4 12l5 5L20 6"/></svg></div>
+        <div style="flex:1;min-width:0"><div class="jtitle">${it.title}</div>
+          <div class="jmc-path">${it.path}</div>
+          <div class="jdesc">${it.desc}</div>
+          ${it.tip?`<div class="jtip"><b>Tip</b><span>${it.tip}</span></div>`:''}</div>
+      </div>`).join('');
+    return `<div class="staff-card ${gi===0?'open':''}" id="jmcg-${gi}">
+      <div class="staff-head" onclick="document.getElementById('jmcg-${gi}').classList.toggle('open')">
+        <div class="staff-avatar" style="font-size:12px">${pr.done}/${pr.total}</div>
+        <div class="staff-name">${g.group}</div>
+        <div class="staff-prog"><div class="sp-bar"><i style="width:${pr.pct}%"></i></div><div class="sp-pct">${pr.pct}%</div></div>
+      </div>
+      <div class="staff-body">${rows}</div></div>`;
+  }).join('');
+}
+
+/* ====================== EMERGENCY & SAFETY ====================== */
+const EMERGENCY=[
+ {id:"fire",cls:"fire",title:"Fire Drill & Evacuation Plan",sub:"5 drills per year · exit by designated doors",
+  icon:'<path d="M12 2s4 4 4 8a4 4 0 01-8 0c0-1 .5-2 1-3 0 2 1 3 2 3 .5-2-1-4 1-6z"/><path d="M8.5 13a3.5 3.5 0 007 0"/>',
+  html:`<div class="emg-sec"><p>Ensuring the safety of students and staff is a top priority. Adhering to this plan minimizes confusion and ensures everyone exits safely. Below is the plan for all 5 drills.</p></div>
+   <div class="emg-sec"><h5>Exit routes by grade</h5>
+     <div class="emg-doors">
+       <div class="emg-door"><div class="dn">Door #5</div><div class="dg">Middle school</div></div>
+       <div class="emg-door"><div class="dn">Door #6</div><div class="dg">4th Grade</div></div>
+       <div class="emg-door"><div class="dn">Door #4</div><div class="dg">2nd, 3rd & Pre-K</div></div>
+       <div class="emg-door"><div class="dn">Door #2</div><div class="dg">1st & Kindergarten</div></div>
+     </div>
+     <ul style="margin-top:8px"><li><b>Gym class:</b> exit through the Church's main entrance.</li><li><b>Return:</b> after the all-clear, re-enter through the same doors.</li></ul>
+     <p style="margin-top:6px"><em>All students and staff must exit through their designated doors to avoid congestion.</em></p></div>
+   <div class="emg-sec"><h5>Assembly point</h5>
+     <ul><li>Assemble in the <b>parking lot</b>, on the side closer to the playground.</li><li>Await the all-clear before returning to classrooms.</li><li>Return through the same doors used to evacuate. <b>Do not</b> enter through the Church front door unless it is gym class or lunch.</li></ul></div>
+   <div class="emg-sec"><h5>Special assignments</h5>
+     <ul><li><b>Door #6:</b> Mr. Mohamed</li><li><b>Door #4:</b> Ms. Aisha</li><li><b>Door #5:</b> Mr. Zakaria / Mr. C</li><li><b>Door #2:</b> Ms. Munira</li><li><b>Staff without students</b> assist with the evacuation, ensuring all students exit safely.</li></ul></div>
+   <div class="emg-sec"><h5>Special needs students</h5>
+     <ul><li>Students with 1-on-1 EAs stay with their assigned EA but remain with their class during evacuation.</li><li>Ms. Tobe is available to assist any students needing extra help.</li></ul></div>
+   <div class="emg-sec"><h5>Missing student action plan</h5>
+     <p>If a student is found missing, immediately contact <b>Mr. Abas</b> and <b>Mr. Mohamed</b> via radio.</p></div>`},
+ {id:"lockdown",cls:"lock",title:"Lockdown Procedure",sub:"Code phrase confidential · channel 16",
+  icon:'<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/>',
+  html:`<div class="emg-sec"><h5>Communication</h5>
+     <ul><li>Lockdown status is communicated over <b>radio (walkies)</b> and the <b>Phone PA system</b>.</li><li>Code phrase: <span class="emg-key">"Lamin Ymal" to the office</span> — must be on <b>channel 16</b>.</li></ul></div>
+   <div class="emg-sec"><h5>What is a lockdown?</h5><p>A lockdown confines all staff and students to the classroom due to a perceived or real threat. Isolating everyone inside limits exposure to outside risk. Practicing drills acclimates staff and students to the process and avoids unnecessary responses.</p></div>
+   <div class="emg-sec"><h5>What to tell students</h5><p>Use age-appropriate language. Review the importance of drills and each student's role, provide clear instructions and objectives, stress following directions, allow feedback, brief all new students, and plan for students with disabilities.</p></div>
+   <div class="emg-sec"><h5>Office responsibilities</h5>
+     <ul><li><b>911 call:</b> Abas, Aisha, or Mr. C.</li><li><b>Door security:</b> all outside doors locked and checked by Abas, Aisha, Mohamed, and Mr. C.</li><li><b>All-clear signal:</b> Abas or Mohamed will notify staff.</li></ul></div>
+   <div class="emg-sec"><h5>In the classroom</h5>
+     <ul><li><b>Direct</b> all students from hallways into classrooms. Do not exit classrooms for any reason.</li><li><b>No cell phones</b> — calls/texts jam the system and draw parents to the school, increasing danger.</li><li><b>Secure the room:</b> lock exterior doors (or barricade with the heaviest object); close windows and blinds; stay away from doors/windows; move students to walls away from the door; shut off lights; do not open doors until all-clear; do not use the phone to request info; be quiet and wait.</li><li><b>Care for students:</b> calm and reassure; assess need for aftercare/debriefing; allow time for physical or verbal stress relief.</li></ul></div>
+   <div class="emg-sec"><h5>Location precautions</h5>
+     <ul><li><b>Gymnasium:</b> move to the locker room (space between stair 2 and gym).</li><li><b>Lunch room:</b> move away from doors to the back storage room.</li><li><b>Outside:</b> stop, drop, remain still or huddle around playground equipment; move into the building if safe.</li><li><b>Bathrooms:</b> move into a stall, lock the door, crouch on the toilet so feet/hands/head are hidden.</li><li><b>Hallway:</b> move into the closest classroom immediately.</li></ul></div>
+   <div class="emg-sec"><h5>Reminders</h5>
+     <ul><li>Keep a lockdown checklist posted or in a desk so no one relies on memory.</li><li>Keep notes of drill dates, times, duration, and participants for administration.</li><li>State statute requires a minimum of <b>two lockdown drills per year</b>; a parent letter template is on file.</li><li>Questions: contact Abas or Arif at 763-450-3522. Classroom video resource is linked in the source document.</li></ul></div>`},
+ {id:"recess",cls:"recess",title:"Recess Expectations",sub:"15 classrooms · shared space · strict schedule",
+  icon:'<circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 000 18M3 12h18"/>',
+  html:`<div class="emg-sec"><h5>Designated recess time</h5><p>Each classroom has a designated recess time — follow it strictly. Fifteen classrooms share a very small play area, so adhering to the schedule keeps recess safe and gives everyone space.</p></div>
+   <div class="emg-sec"><h5>Procedures</h5>
+     <ul><li><b>Walkie-talkies:</b> bring yours to recess — essential for communication and safety.</li><li><b>Recess key:</b> located in the lunchroom; retrieve it before heading out.</li></ul></div>
+   <div class="emg-sec"><h5>Safety measures</h5>
+     <ul><li>Students may <b>not</b> retrieve balls that go into the street.</li><li>If a student is hurt or needs help, use the walkie — someone on <b>channel 1</b> will open the door and assist.</li></ul></div>
+   <div class="emg-sec"><h5>Chain management</h5>
+     <ul><li><b>Setup:</b> staff put up the chains around the play area Monday morning; First Recess hooks the chains.</li><li><b>Removal:</b> chains come down Friday after recess.</li></ul></div>
+   <div class="emg-sec"><h5>Daily recess cones</h5>
+     <ul><li>Block traffic to the parking lot with cones before students go out.</li><li>Return the cones after use.</li></ul></div>`}
+];
+function toggleReview(id){ const k='review_'+id; PERSONAL.checks[k]=!PERSONAL.checks[k]; savePersonal(); renderEmergency(); }
+function renderEmergency(){
+  const cards=EMERGENCY.map(e=>{
+    const on=!!PERSONAL.checks['review_'+e.id];
+    return `<div class="emg-card" id="emg-${e.id}">
+      <div class="emg-head" onclick="if(!event.target.closest('.review'))document.getElementById('emg-${e.id}').classList.toggle('open')">
+        <div class="emg-ic ${e.cls}"><svg viewBox="0 0 24 24">${e.icon}</svg></div>
+        <div><div class="et">${e.title}</div><div class="es">${e.sub}</div></div>
+        <span class="review ${on?'on':''}" onclick="toggleReview('${e.id}')">
+          <span class="cbox"><svg viewBox="0 0 24 24"><path d="M4 12l5 5L20 6"/></svg></span>I've reviewed this</span>
+      </div>
+      <div class="emg-body">${e.html}</div></div>`;
+  }).join('');
+  $("#sub-emergency").innerHTML=`
+    <div class="callout" style="margin-bottom:18px"><div class="ci"><svg viewBox="0 0 24 24"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.7 3.86a2 2 0 00-3.4 0z"/></svg></div>
+      <div><h4>Review before Day 1</h4><p>These are Bultum's fire evacuation, lockdown, and recess procedures. Read each one and mark it reviewed — your acknowledgment saves privately on this device. The live Emergency Drills &amp; Crisis Response session is Tuesday, Aug 18.</p></div></div>
+    ${cards}`;
+}
+
+/* ====================== TRAINING CERTIFICATES ====================== */
+/* Add or edit courses here. Use an UNLISTED YouTube video's ID (the part
+   after v= or youtu.be/). Leave youtube:"" and the course shows as "coming
+   soon" until you add an ID.                                               */
+const CERT_COURSES = [
+ {id:"champion", title:"Every Kid Needs a Champion", youtube:"SFnMTHhKdkw", minutes:"~8 min",
+  desc:"Rita Pierson's rousing call to educators to believe in every student and connect with them on a real, human level — because kids don't learn from people they don't like."},
+ {id:"bbp", title:"Bloodborne Pathogens", youtube:"", minutes:"~20 min",
+  desc:"OSHA-aligned bloodborne pathogens awareness — exposure control, universal precautions, and reporting."},
+ {id:"ferpa", title:"Data Privacy & FERPA", youtube:"", minutes:"~15 min",
+  desc:"Handling student data responsibly under FERPA and the Minnesota Government Data Practices Act."},
+ {id:"ai", title:"AI Acceptable Use", youtube:"", minutes:"~15 min",
+  desc:"Using AI tools responsibly — keeping student data out of ungoverned tools, per MDE guidance."},
+ {id:"phishing", title:"Cybersecurity & Phishing Awareness", youtube:"", minutes:"~15 min",
+  desc:"Spotting phishing, strong passwords/MFA, and reporting suspicious email before systems go live."}
+];
+
+let ytReady=false, ytLoading=false, certPlayer=null, certCourse=null;
+let certWatched=new Set(), certLast=0, certInterval=null, certDone=false, certPending=null;
+
+function loadYT(){
+  if(ytReady||ytLoading) return;
+  ytLoading=true;
+  const tag=document.createElement('script'); tag.src="https://www.youtube.com/iframe_api";
+  document.head.appendChild(tag);
+}
+window.onYouTubeIframeAPIReady=function(){ ytReady=true; if(certPending){ const c=certPending; certPending=null; buildPlayer(c); } };
+
+function renderCertificates(){
+  // config note
+  const note=$("#certConfigNote");
+  if(!CERT_CONFIG.trackingUrl || CERT_CONFIG.trackingUrl.includes('PASTE')){
+    note.innerHTML=`<div class="callout" style="margin-bottom:18px"><div class="ci"><svg viewBox="0 0 24 24"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.7 3.86a2 2 0 00-3.4 0z"/></svg></div>
+      <div><h4>Logging not connected yet</h4><p>Certificates will still download, but completions won't be recorded until you deploy the included Code.gs and paste its web-app URL into <b>CERT_CONFIG.trackingUrl</b> near the top of this file.</p></div></div>`;
+  } else note.innerHTML='';
+  $("#certPlayerWrap").style.display='none';
+  const cat=$("#certCatalog"); cat.style.display='block';
+  cat.innerHTML=`<div class="cert-grid">${CERT_COURSES.map(c=>{
+    const done=!!PERSONAL.checks['cert_'+c.id];
+    const ready=!!c.youtube;
+    const badge=done?'<span class="cert-badge done">✓ Completed</span>':(ready?'':'<span class="cert-badge soon">Add video ID</span>');
+    return `<div class="cert-card">
+      <div class="cc-top"><div class="cc-ic"><svg viewBox="0 0 24 24"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg></div>
+        <div><h4>${c.title}</h4><div class="cc-min">${c.minutes}</div></div></div>
+      <p>${c.desc}</p>
+      <div class="cc-foot">
+        <button class="cc-btn" ${ready?'':'disabled'} onclick="openCourse('${c.id}')">${done?'Watch again':(ready?'Start training':'Coming soon')}</button>
+        ${badge}
+      </div></div>`;
+  }).join('')}</div>`;
+}
+
+function openCourse(id){
+  const c=CERT_COURSES.find(x=>x.id===id); if(!c||!c.youtube) return;
+  certCourse=c; certWatched=new Set(); certLast=0; certDone=false;
+  clearInterval(certInterval); certInterval=null;
+  $("#certCatalog").style.display='none';
+  const w=$("#certPlayerWrap"); w.style.display='block';
+  const preName=(PERSONAL.name||'').replace(/"/g,'&quot;');
+  w.innerHTML=`<div class="cert-player">
+    <div class="cp-head"><button class="cp-back" onclick="closeCourse()"><svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>All trainings</button><h3>${c.title}</h3></div>
+    <div class="cp-body">
+      <div class="video-wrap"><div id="ytplayer"></div></div>
+      <div class="cp-progress"><div class="cp-bar"><div class="cp-fill" id="cpFill"></div></div><div class="cp-lbl" id="cpLbl">0% watched</div></div>
+      <div class="cp-status" id="cpStatus">Please watch the entire video. Skipping ahead will not count toward completion.</div>
+      <div class="cp-form" id="cpForm">
+        <div class="field"><label>Full name (as it should appear on the certificate)</label><input type="text" id="cpName" value="${preName}" placeholder="e.g. Amina Yusuf"></div>
+        <div class="field"><label>Work email</label><input type="email" id="cpEmail" placeholder="you@bultumacademy.org"></div>
+        <button class="cp-gen" id="cpGen" onclick="submitCert()">Submit &amp; download certificate</button>
+      </div>
+    </div></div>`;
+  if(ytReady) buildPlayer(c); else { certPending=c; loadYT(); }
+}
+function buildPlayer(c){
+  if(certPlayer && certPlayer.destroy){ try{certPlayer.destroy();}catch(e){} certPlayer=null; }
+  certPlayer=new YT.Player('ytplayer',{videoId:c.youtube,playerVars:{rel:0,modestbranding:1,controls:1},events:{onStateChange:onCertState}});
+}
+function onCertState(ev){
+  if(ev.data===YT.PlayerState.PLAYING){
+    certLast=certPlayer.getCurrentTime();
+    if(!certInterval) certInterval=setInterval(trackCert,500);
+  } else { clearInterval(certInterval); certInterval=null; if(certPlayer&&certPlayer.getCurrentTime) certLast=certPlayer.getCurrentTime(); }
+}
+function trackCert(){
+  if(!certPlayer||!certPlayer.getCurrentTime) return;
+  const cur=certPlayer.getCurrentTime(), dur=certPlayer.getDuration(); if(!dur) return;
+  if(cur>certLast && cur-certLast<1.5){ for(let s=Math.floor(certLast);s<Math.floor(cur);s++) certWatched.add(s); }
+  certLast=cur;
+  const frac=certWatched.size/Math.floor(dur), p=Math.min(100,Math.round(frac*100));
+  const f=$("#cpFill"), l=$("#cpLbl"); if(f)f.style.width=p+'%'; if(l)l.textContent=p+'% watched';
+  if(!certDone && frac>=CERT_CONFIG.requiredFraction) certComplete();
+}
+function certComplete(){
+  certDone=true;
+  const s=$("#cpStatus"); if(s){ s.classList.add('complete'); s.textContent='✓ Video complete. Enter your details below to receive your certificate.'; }
+  const form=$("#cpForm"); if(form){ form.classList.add('active'); form.scrollIntoView({behavior:'smooth',block:'nearest'}); }
+}
+function closeCourse(){
+  clearInterval(certInterval); certInterval=null;
+  if(certPlayer && certPlayer.pauseVideo){ try{certPlayer.pauseVideo();}catch(e){} }
+  renderCertificates();
+}
+async function submitCert(){
+  const name=($("#cpName").value||'').trim(), email=($("#cpEmail").value||'').trim();
+  if(!name){ $("#cpName").focus(); return; }
+  if(!email||!email.includes('@')){ $("#cpEmail").focus(); return; }
+  if(!certDone){ alert('Please finish watching the video first.'); return; }
+  const btn=$("#cpGen"); btn.disabled=true; btn.textContent='Recording completion…';
+  if(PERSONAL.name!==name){ PERSONAL.name=name; savePersonal(); }
+  const certId='CERT-'+Date.now().toString(36).toUpperCase()+'-'+Math.random().toString(36).substring(2,6).toUpperCase();
+  const watchedPct=Math.round((certWatched.size/Math.floor(certPlayer.getDuration()))*100);
+  const logged=await logCert({name,email,course:certCourse.title,certificateId:certId,watchedPercent:watchedPct,videoId:certCourse.youtube,userAgent:navigator.userAgent});
+  generateCertPDF(name,certId,certCourse.title);
+  PERSONAL.checks['cert_'+certCourse.id]=true; savePersonal();
+  const s=$("#cpStatus");
+  if(logged){ s.classList.remove('error'); s.classList.add('complete'); s.textContent='✓ Completion recorded. Your certificate has been downloaded.'; }
+  else { s.classList.remove('complete'); s.classList.add('error'); s.textContent='⚠ Certificate downloaded, but completion could not be recorded. Email a copy to your training admin.'; }
+  btn.textContent='Certificate downloaded ✓';
+}
+async function logCert(payload){
+  if(!CERT_CONFIG.trackingUrl || CERT_CONFIG.trackingUrl.includes('PASTE')) return false;
+  try{ await fetch(CERT_CONFIG.trackingUrl,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload)}); return true; }
+  catch(err){ console.error('cert log failed',err); return false; }
+}
+function generateCertPDF(name,certId,course){
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({orientation:'landscape',unit:'pt',format:'a4'});
+  const W=doc.internal.pageSize.getWidth(), H=doc.internal.pageSize.getHeight();
+  doc.setFillColor(247,243,232); doc.rect(0,0,W,H,'F');
+  doc.setDrawColor(199,154,60); doc.setLineWidth(3); doc.rect(24,24,W-48,H-48);
+  doc.setDrawColor(19,53,42); doc.setLineWidth(.5); doc.rect(36,36,W-72,H-72);
+  doc.setFont('helvetica','normal'); doc.setFontSize(11); doc.setTextColor(169,128,43);
+  doc.text('BULTUM ACADEMY',W/2,92,{align:'center'});
+  doc.setFontSize(12); doc.setTextColor(19,53,42);
+  doc.text('CERTIFICATE OF COMPLETION',W/2,116,{align:'center'});
+  doc.setDrawColor(199,154,60); doc.setLineWidth(1); doc.line(W/2-60,128,W/2+60,128);
+  doc.setFontSize(13); doc.setTextColor(107,114,120); doc.text('This is to certify that',W/2,170,{align:'center'});
+  doc.setFont('times','bold'); doc.setFontSize(42); doc.setTextColor(19,53,42); doc.text(name,W/2,224,{align:'center'});
+  const nw=doc.getTextWidth(name); doc.setDrawColor(19,53,42); doc.setLineWidth(.5); doc.line(W/2-nw/2-10,236,W/2+nw/2+10,236);
+  doc.setFont('helvetica','normal'); doc.setFontSize(13); doc.setTextColor(107,114,120);
+  doc.text('has successfully completed the training course',W/2,268,{align:'center'});
+  doc.setFont('times','italic'); doc.setFontSize(24); doc.setTextColor(169,128,43); doc.text(course,W/2,308,{align:'center'});
+  const dateStr=new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});
+  doc.setFont('helvetica','normal'); doc.setFontSize(11); doc.setTextColor(107,114,120); doc.text('Issued on '+dateStr,W/2,342,{align:'center'});
+  doc.setDrawColor(19,53,42); doc.setLineWidth(.5); doc.line(90,H-100,260,H-100);
+  doc.setFontSize(11); doc.setTextColor(19,53,42); doc.text(CERT_CONFIG.signatoryName,175,H-85,{align:'center'});
+  doc.setFontSize(9); doc.setTextColor(107,114,120); doc.text(CERT_CONFIG.signatoryTitle,175,H-72,{align:'center'});
+  doc.setFontSize(11); doc.setTextColor(19,53,42); doc.text(CERT_CONFIG.org,W-175,H-85,{align:'center'});
+  doc.setFontSize(9); doc.setTextColor(107,114,120); doc.text('Issuing Organization',W-175,H-72,{align:'center'});
+  doc.setDrawColor(19,53,42); doc.line(W-260,H-100,W-90,H-100);
+  doc.setFontSize(8); doc.setTextColor(150,150,150); doc.text('Certificate '+certId,W/2,H-50,{align:'center'});
+  doc.save((course.replace(/\s+/g,'_'))+'_'+(name.replace(/\s+/g,'_'))+'.pdf');
+}
+
 /* ====================== NAV ====================== */
-const VIEW_TITLES={overview:"Overview",roadmap:"Roadmap",training:"Training",staff:"Staff Checklist",resources:"Resource Library"};
+const VIEW_TITLES={overview:"Overview",roadmap:"Roadmap",training:"Training",staff:"Staff Checklist",jmc:"JMC Setup",teacher:"Teacher Center",certificates:"Training Certificates",resources:"Resource Library"};
+let currentView='overview';
 function switchView(v){
+  if(currentView==='certificates' && v!=='certificates' && certPlayer && certPlayer.pauseVideo){ try{certPlayer.pauseVideo();}catch(e){} clearInterval(certInterval); certInterval=null; }
+  currentView=v;
   $$(".view").forEach(s=>s.classList.add('hidden'));
   $("#view-"+v).classList.remove('hidden');
   $$(".nav-btn").forEach(b=>b.classList.toggle('active',b.dataset.view===v));
@@ -1133,6 +1893,9 @@ function switchView(v){
   if(v==='roadmap')renderRoadmap();
   if(v==='training')renderTraining();
   if(v==='staff')renderStaff();
+  if(v==='jmc')renderJmc();
+  if(v==='teacher')renderTeacher();
+  if(v==='certificates'){ loadYT(); renderCertificates(); }
   if(v==='resources')renderResources();
   toggleSidebar(false);
   window.scrollTo(0,0);
@@ -1142,6 +1905,7 @@ function updateCounts(){
   const tb=TRAININGS.filter(t=>trainState(t.id).status==="Complete").length;
   $("#cnTraining").textContent=`${tb}/${TRAININGS.length}`;
   $("#cnStaff").textContent=STATE.staff.length;
+  const jo=jmcOverall(); const je=$("#cnJmc"); if(je) je.textContent=`${jo.done}/${jo.total}`;
 }
 function toggleSidebar(show){
   const sb=$("#sidebar"),sc=$("#scrim");
@@ -1157,7 +1921,7 @@ function exportJSON(){
 }
 function resetAll(){
   if(confirm('Reset ALL progress, training, and staff data? This cannot be undone.')){
-    STATE={tasks:{},trainings:{},staff:[]}; Persistence.save(STATE);
+    STATE={tasks:{},trainings:{},staff:[],jmc:{}}; Persistence.save(STATE);
     renderOverview();renderRoadmap();renderTraining();renderStaff();updateCounts();
   }
 }
@@ -1176,9 +1940,11 @@ function buildFilters(){
 }
 async function init(){
   initBackend();
+  loadPersonal();
   const saved=await Persistence.load();
-  if(saved){ STATE=Object.assign({tasks:{},trainings:{},staff:[]},saved); }
+  if(saved){ STATE=Object.assign({tasks:{},trainings:{},staff:[],jmc:{}},saved); }
   $$(".nav-btn").forEach(b=>b.onclick=()=>switchView(b.dataset.view));
+  $$("#teacherSubTabs button").forEach(b=>b.onclick=()=>switchTeacherSub(b.dataset.sub));
   buildFilters();
   renderOverview(); updateCounts();
   subscribeLive();
